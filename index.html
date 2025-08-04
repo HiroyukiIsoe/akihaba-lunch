@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="秋葉原エリアのおすすめランチスポットを地図で探せるWebアプリケーション"
+    />
+    <title>秋葉原ランチマップ</title>
+
+    <!-- Leaflet.js CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <!-- カスタムCSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="header-title">秋葉原ランチマップ</h1>
+        <p class="header-description">
+          秋葉原エリアのおすすめランチスポットを見つけよう
+        </p>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+      <!-- 地図コンテナ -->
+      <section class="map-section" aria-label="地図表示エリア">
+        <div
+          id="map"
+          class="map-container"
+          role="application"
+          aria-label="秋葉原ランチスポット地図"
+        ></div>
+      </section>
+
+      <!-- 情報パネル -->
+      <aside class="info-section" aria-label="店舗情報表示エリア">
+        <div id="info-panel" class="info-panel">
+          <div class="info-panel-content">
+            <h2 class="info-title">店舗を選択してください</h2>
+            <p class="info-description">
+              地図上のマーカーをクリックすると、店舗の詳細情報が表示されます。
+            </p>
+            <div class="info-instructions">
+              <ul>
+                <li>🍜 マーカーをクリックして店舗詳細を表示</li>
+                <li>🏢 数字付きマーカーは複数店舗があるビル</li>
+                <li>📱 スマートフォンでもご利用いただけます</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- エラー表示用（初期は非表示） -->
+    <div
+      id="error-message"
+      class="error-message"
+      role="alert"
+      aria-live="polite"
+      style="display: none"
+    >
+      <div class="error-content">
+        <h3>エラーが発生しました</h3>
+        <p id="error-text"></p>
+      </div>
+    </div>
+
+    <!-- ローディング表示用（初期は非表示） -->
+    <div
+      id="loading"
+      class="loading"
+      aria-label="読み込み中"
+      style="display: none"
+    >
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p>地図を読み込んでいます...</p>
+      </div>
+    </div>
+
+    <!-- Leaflet.js JavaScript -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+
+    <!-- カスタムJavaScript -->
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,210 @@
+// 秋葉原ランチマップ - レストランデータ
+// CORSエラー回避のため、JSONデータをJavaScriptファイルとして定義
+
+const RESTAURANT_DATA = {
+  restaurants: [
+    {
+      id: "akihabara_ramen_001",
+      name: "秋葉原ラーメン横丁",
+      genre: "ラーメン",
+      priceRange: "500-800円",
+      coordinates: {
+        lat: 35.7023,
+        lng: 139.7745,
+      },
+      description:
+        "昔ながらの醤油ラーメンが自慢。チャーシューメンがおすすめ。濃厚なスープと手打ち麺の組み合わせが絶品です。",
+      hours: "11:00-22:00",
+      address: "東京都千代田区外神田1-1-1",
+      floor: "2F",
+      buildingName: "秋葉原グルメビル",
+      tags: ["ラーメン", "安い", "早い"],
+    },
+    {
+      id: "akihabara_curry_002",
+      name: "スパイスカレー専門店",
+      genre: "カレー",
+      priceRange: "800-1200円",
+      coordinates: {
+        lat: 35.7023,
+        lng: 139.7745,
+      },
+      description:
+        "本格的なスパイスカレーが味わえる。チキンカレーが人気。20種類以上のスパイスを使った本格派。",
+      hours: "11:30-21:00",
+      address: "東京都千代田区外神田1-1-1",
+      floor: "3F",
+      buildingName: "秋葉原グルメビル",
+      tags: ["カレー", "スパイス", "本格派"],
+    },
+    {
+      id: "akihabara_sushi_003",
+      name: "回転寿司 秋葉原店",
+      genre: "寿司",
+      priceRange: "1000-2000円",
+      coordinates: {
+        lat: 35.7023,
+        lng: 139.7745,
+      },
+      description:
+        "新鮮なネタが自慢の回転寿司。ランチタイムはお得なセットメニューも充実。",
+      hours: "11:00-23:00",
+      address: "東京都千代田区外神田1-1-1",
+      floor: "4F",
+      buildingName: "秋葉原グルメビル",
+      tags: ["寿司", "新鮮", "セット"],
+    },
+    {
+      id: "akihabara_tonkatsu_004",
+      name: "とんかつ まい泉",
+      genre: "とんかつ",
+      priceRange: "900-1500円",
+      coordinates: {
+        lat: 35.7015,
+        lng: 139.774,
+      },
+      description:
+        "サクサクの衣と柔らかい豚肉が絶品。ロースカツ定食が人気メニュー。",
+      hours: "11:00-21:30",
+      address: "東京都千代田区外神田1-2-3",
+      floor: "1F",
+      buildingName: "単独店舗",
+      tags: ["とんかつ", "定食", "人気"],
+    },
+    {
+      id: "akihabara_udon_005",
+      name: "讃岐うどん 麺屋",
+      genre: "うどん",
+      priceRange: "400-700円",
+      coordinates: {
+        lat: 35.703,
+        lng: 139.775,
+      },
+      description:
+        "本場讃岐の手打ちうどん。コシの強い麺とあっさりした出汁が自慢。",
+      hours: "10:30-20:00",
+      address: "東京都千代田区外神田1-3-5",
+      floor: "1F",
+      buildingName: "単独店舗",
+      tags: ["うどん", "手打ち", "讃岐"],
+    },
+    {
+      id: "akihabara_yakiniku_006",
+      name: "焼肉 牛角",
+      genre: "焼肉",
+      priceRange: "1200-2500円",
+      coordinates: {
+        lat: 35.701,
+        lng: 139.7735,
+      },
+      description: "上質な和牛を使った焼肉店。ランチタイムは焼肉定食がお得。",
+      hours: "11:30-23:00",
+      address: "東京都千代田区外神田1-4-7",
+      floor: "2F",
+      buildingName: "単独店舗",
+      tags: ["焼肉", "和牛", "定食"],
+    },
+    {
+      id: "akihabara_italian_007",
+      name: "イタリアン カフェ ベラ",
+      genre: "イタリアン",
+      priceRange: "1000-1800円",
+      coordinates: {
+        lat: 35.7025,
+        lng: 139.7755,
+      },
+      description:
+        "本格的なパスタとピザが楽しめるカジュアルイタリアン。ランチセットが人気。",
+      hours: "11:00-22:00",
+      address: "東京都千代田区外神田1-5-9",
+      floor: "1F",
+      buildingName: "単独店舗",
+      tags: ["イタリアン", "パスタ", "ピザ"],
+    },
+    {
+      id: "akihabara_chinese_008",
+      name: "中華料理 龍王",
+      genre: "中華",
+      priceRange: "700-1300円",
+      coordinates: {
+        lat: 35.7018,
+        lng: 139.7742,
+      },
+      description:
+        "本格四川料理が味わえる中華レストラン。麻婆豆腐と担々麺が絶品。",
+      hours: "11:30-21:00",
+      address: "東京都千代田区外神田1-6-2",
+      floor: "2F",
+      buildingName: "秋葉原中華ビル",
+      tags: ["中華", "四川", "麻婆豆腐"],
+    },
+    {
+      id: "akihabara_dim_sum_009",
+      name: "点心専門店 香港",
+      genre: "点心",
+      priceRange: "600-1100円",
+      coordinates: {
+        lat: 35.7018,
+        lng: 139.7742,
+      },
+      description:
+        "本場香港の点心が楽しめる専門店。小籠包と焼売が特におすすめ。",
+      hours: "11:00-20:30",
+      address: "東京都千代田区外神田1-6-2",
+      floor: "3F",
+      buildingName: "秋葉原中華ビル",
+      tags: ["点心", "小籠包", "香港"],
+    },
+    {
+      id: "akihabara_cafe_010",
+      name: "メイドカフェ ぽぷりん",
+      genre: "カフェ",
+      priceRange: "800-1500円",
+      coordinates: {
+        lat: 35.7028,
+        lng: 139.7748,
+      },
+      description:
+        "秋葉原名物のメイドカフェ。オムライスとパフェが人気メニュー。",
+      hours: "10:00-22:00",
+      address: "東京都千代田区外神田1-7-4",
+      floor: "3F",
+      buildingName: "単独店舗",
+      tags: ["メイドカフェ", "オムライス", "秋葉原名物"],
+    },
+    {
+      id: "akihabara_bento_011",
+      name: "弁当屋 おふくろの味",
+      genre: "弁当",
+      priceRange: "400-800円",
+      coordinates: {
+        lat: 35.702,
+        lng: 139.7738,
+      },
+      description:
+        "手作りの家庭的な弁当が人気。日替わり弁当は毎日違うメニューが楽しめる。",
+      hours: "10:00-19:00",
+      address: "東京都千代田区外神田1-8-6",
+      floor: "1F",
+      buildingName: "単独店舗",
+      tags: ["弁当", "家庭的", "日替わり"],
+    },
+    {
+      id: "akihabara_sandwich_012",
+      name: "サンドイッチファクトリー",
+      genre: "サンドイッチ",
+      priceRange: "500-900円",
+      coordinates: {
+        lat: 35.7012,
+        lng: 139.7752,
+      },
+      description:
+        "新鮮な野菜とハムを使ったボリューム満点のサンドイッチ。テイクアウトも可能。",
+      hours: "8:00-18:00",
+      address: "東京都千代田区外神田1-9-8",
+      floor: "1F",
+      buildingName: "単独店舗",
+      tags: ["サンドイッチ", "テイクアウト", "ボリューム"],
+    },
+  ],
+};

@@ -198,6 +198,48 @@ body {
   border-right-color: rgba(44, 62, 80, 0.9);
 }
 
+/* マーカーポップアップスタイル */
+.marker-popup {
+  text-align: center;
+  min-width: 150px;
+}
+
+.marker-popup h3 {
+  color: #2c3e50;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.marker-popup p {
+  margin: 0.25rem 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.cluster-popup {
+  text-align: center;
+  min-width: 150px;
+}
+
+.cluster-popup h3 {
+  color: #2c3e50;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.cluster-popup p {
+  margin: 0.25rem 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.cluster-popup small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
 /* レストラン一覧スタイル */
 .restaurant-list {
   margin-top: 1.5rem;
@@ -287,10 +329,17 @@ body {
   border-left: 4px solid #3498db;
 }
 
-.restaurant-details h3 {
+.restaurant-details h2 {
   color: #2c3e50;
   font-size: 1.4rem;
   margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.restaurant-details h3 {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
   font-weight: 600;
 }
 
@@ -298,15 +347,143 @@ body {
   margin-bottom: 1rem;
 }
 
-.restaurant-info p {
+.info-row {
+  display: flex;
   margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.info-row .label {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 80px;
+  margin-right: 0.5rem;
+}
+
+.info-row .value {
+  color: #495057;
+  flex: 1;
+}
+
+.restaurant-description {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.restaurant-description p {
+  margin: 0;
   color: #495057;
   line-height: 1.6;
 }
 
-.restaurant-info strong {
+.restaurant-tags {
+  margin-top: 1rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 複数店舗一覧表示スタイル */
+.multiple-restaurants {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #e74c3c;
+}
+
+.multiple-restaurants h2 {
   color: #2c3e50;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
+}
+
+.building-info {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.restaurant-item h3 {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.floor {
+  color: #6c757d;
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.restaurant-summary {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.restaurant-hours {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* デフォルトメッセージスタイル */
+.default-message {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+/* エラーパネルスタイル */
+.error-panel {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.error-panel h2 {
+  color: #721c24;
+  margin-bottom: 1rem;
+}
+
+.error-panel button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.error-panel button:hover {
+  background-color: #c82333;
 }
 
 /* エラーメッセージスタイル */

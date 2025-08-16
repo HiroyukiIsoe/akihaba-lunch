@@ -1,66 +1,4 @@
-// 秋葉原ランチマップ - メインスクリプト
-
-// 秋葉原駅周辺の座標設定
-const AKIHABARA_CENTER = {
-  lat: 35.7017929, // 秋葉原エリアの中心緯度
-  lng: 139.7703092, // 秋葉原エリアの中心経度
-};
-const DEFAULT_ZOOM = 18; // 秋葉原エリアが見やすいズームレベル（より詳細表示）
-
-// グローバル変数
-let mapManager = null;
-
-// アプリケーション初期化
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("秋葉原ランチマップを初期化中...");
-
-  try {
-    // ローディング表示
-    showLoading(true);
-
-    // MapManagerインスタンスを作成
-    mapManager = new MapManager("map", AKIHABARA_CENTER, DEFAULT_ZOOM);
-
-    // 地図を初期化（要件1.1, 1.2, 1.3に対応）
-    mapManager.initializeMap();
-
-    console.log("地図の初期化が完了しました");
-
-    // ローディング非表示
-    showLoading(false);
-  } catch (error) {
-    console.error("アプリケーションの初期化に失敗しました:", error);
-    showLoading(false);
-    showError(
-      "アプリケーションの初期化に失敗しました。ページを再読み込みしてください。"
-    );
-  }
-});
-
-/**
- * ローディング表示の制御
- * @param {boolean} show - 表示するかどうか
- */
-function showLoading(show) {
-  const loadingElement = document.getElementById("loading");
-  if (loadingElement) {
-    loadingElement.style.display = show ? "block" : "none";
-  }
-}
-
-/**
- * エラーメッセージの表示
- * @param {string} message - エラーメッセージ
- */
-function showError(message) {
-  const errorElement = document.getElementById("error-message");
-  const errorText = document.getElementById("error-text");
-
-  if (errorElement && errorText) {
-    errorText.textContent = message;
-    errorElement.style.display = "block";
-  }
-}
+// 秋葉原ランチマップ - MapManagerクラス
 
 /**
  * MapManager クラス - 地図の初期化と管理を担当
@@ -232,23 +170,5 @@ class MapManager {
    */
   getMap() {
     return this.map;
-  }
-}
-
-class RestaurantManager {
-  constructor(mapManager, infoPanelManager) {
-    // 実装予定
-  }
-}
-
-class InfoPanelManager {
-  constructor(panelId) {
-    // 実装予定
-  }
-}
-
-class DataLoader {
-  static async loadRestaurants() {
-    // 実装予定
   }
 }

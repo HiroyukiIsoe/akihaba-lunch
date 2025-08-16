@@ -76,6 +76,15 @@ class RestaurantManager {
     try {
       const marker = this.mapManager.addMarker(restaurant);
 
+      // ツールチップを設定（ホバー時に表示）
+      const tooltipContent = `${escapeHtml(restaurant.name)}`;
+      marker.bindTooltip(tooltipContent, {
+        permanent: false,
+        direction: "top",
+        offset: [0, -10],
+        className: "custom-tooltip",
+      });
+
       // ポップアップを設定
       const popupContent = `
         <div class="marker-popup">
@@ -86,10 +95,8 @@ class RestaurantManager {
       `;
       marker.bindPopup(popupContent);
 
-      // クリックイベントを設定
-      marker.on("click", () => {
-        this.showRestaurantInfo(restaurant);
-      });
+      // マーカーインタラクションイベントを設定
+      this.setupMarkerInteractions(marker, restaurant, "single");
     } catch (error) {
       console.error(
         `単一店舗マーカーの作成に失敗しました (${restaurant.name}):`,
@@ -124,8 +131,17 @@ class RestaurantManager {
       // 地図に追加
       marker.addTo(this.mapManager.getMap());
 
-      // ポップアップを設定
+      // ツールチップを設定（ホバー時に表示）
       const buildingName = restaurants[0].buildingName || "複数店舗";
+      const tooltipContent = `${escapeHtml(buildingName)} (${count}店舗)`;
+      marker.bindTooltip(tooltipContent, {
+        permanent: false,
+        direction: "top",
+        offset: [0, -10],
+        className: "custom-tooltip cluster-tooltip",
+      });
+
+      // ポップアップを設定
       const popupContent = `
         <div class="cluster-popup">
           <h3>${escapeHtml(buildingName)}</h3>
@@ -135,10 +151,8 @@ class RestaurantManager {
       `;
       marker.bindPopup(popupContent);
 
-      // クリックイベントを設定
-      marker.on("click", () => {
-        this.showMultipleRestaurants(restaurants);
-      });
+      // マーカーインタラクションイベントを設定
+      this.setupMarkerInteractions(marker, restaurants, "cluster");
 
       // マーカーを管理用Mapに保存（最初のレストランのIDで管理）
       this.mapManager.markers.set(`cluster_${locationKey}`, marker);
@@ -229,6 +243,72 @@ class RestaurantManager {
    */
   getRestaurants() {
     return this.restaurants;
+  }
+
+  /**
+   * マーカーのインタラクションイベントを設定する
+   * @param {Object} marker - Leafletマーカーオブジェクト
+   * @param {Object|Array} data - レストランデータ（単一店舗）またはレストランデータの配列（複数店舗）
+   * @param {string} type - マーカータイプ（'single' または 'cluster'）
+   */
+  setupMarkerInteractions(marker, data, type) {
+    try {
+      // クリックイベント
+      marker.on("click", (e) => {
+        // イベントの伝播を停止
+        L.DomEvent.stopPropagation(e);
+
+        if (type === "single") {
+          // 単一店舗の場合
+          this.showRestaurantInfo(data);
+        } else if (type === "cluster") {
+          // 複数店舗の場合
+          this.showMultipleRestaurants(data);
+        }
+      });
+
+      // マウスオーバーイベント（ツールチップ表示の補助）
+      marker.on("mouseover", (e) => {
+        // ツールチップを強制表示
+        marker.openTooltip();
+
+        // マーカーのスタイルを変更（視覚的フィードバック）
+        if (type === "cluster") {
+          // クラスターマーカーの場合、CSSクラスを追加
+          const element = marker.getElement();
+          if (element) {
+            element.classList.add("cluster-marker-hover");
+          }
+        }
+        // 通常マーカーの場合はCSSのhoverで処理
+      });
+
+      // マウスアウトイベント（元のスタイルに戻す）
+      marker.on("mouseout", (e) => {
+        // ツールチップを閉じる
+        marker.closeTooltip();
+
+        // マーカーのスタイルを元に戻す
+        if (type === "cluster") {
+          // クラスターマーカーの場合、CSSクラスを削除
+          const element = marker.getElement();
+          if (element) {
+            element.classList.remove("cluster-marker-hover");
+          }
+        }
+        // 通常マーカーの場合はCSSのhoverで処理
+      });
+
+      // キーボードアクセシビリティ対応
+      marker.on("keypress", (e) => {
+        if (e.originalEvent.key === "Enter" || e.originalEvent.key === " ") {
+          // Enterキーまたはスペースキーでクリックイベントを発火
+          marker.fire("click");
+        }
+      });
+    } catch (error) {
+      console.error("マーカーインタラクションの設定に失敗しました:", error);
+    }
   }
 
   /**

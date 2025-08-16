@@ -61,7 +61,7 @@ class InfoPanelManager {
             }
           </div>
           <div class="restaurant-description">
-            <h3>店舗情報</h3>
+            <h3>おすすめメニュー・店舗情報</h3>
             <p>${escapeHtml(restaurant.description)}</p>
           </div>
           ${
@@ -108,7 +108,9 @@ class InfoPanelManager {
         html += `
           <div class="restaurant-item" onclick="showRestaurantDetails('${
             restaurant.id
-          }')">
+          }')" role="button" tabindex="0" onkeypress="if(event.key==='Enter'||event.key===' ') showRestaurantDetails('${
+          restaurant.id
+        }')" aria-label="${escapeHtml(restaurant.name)}の詳細を表示">
             <h3 class="restaurant-name">
               ${escapeHtml(restaurant.name)}
               ${

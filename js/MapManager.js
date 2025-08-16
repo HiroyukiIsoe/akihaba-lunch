@@ -87,6 +87,9 @@ class MapManager {
       // マーカーを地図に追加
       marker.addTo(this.map);
 
+      // アクセシビリティ属性を追加
+      this.setupMarkerAccessibility(marker, restaurant);
+
       // マーカーを管理用Mapに保存
       this.markers.set(restaurant.id, marker);
 
@@ -94,6 +97,44 @@ class MapManager {
     } catch (error) {
       console.error("マーカーの追加に失敗しました:", error);
       throw error;
+    }
+  }
+
+  /**
+   * マーカーのアクセシビリティを設定する
+   * @param {Object} marker - Leafletマーカーオブジェクト
+   * @param {Object} restaurant - レストランデータ
+   */
+  setupMarkerAccessibility(marker, restaurant) {
+    try {
+      // マーカーが地図に追加された後にDOM要素にアクセス
+      marker.on("add", () => {
+        const markerElement = marker.getElement();
+        if (markerElement) {
+          // キーボードフォーカス可能にする
+          markerElement.setAttribute("tabindex", "0");
+
+          // アクセシビリティ属性を設定
+          markerElement.setAttribute("role", "button");
+          markerElement.setAttribute(
+            "aria-label",
+            `${restaurant.name}の詳細を表示`
+          );
+          markerElement.setAttribute(
+            "aria-describedby",
+            `marker-${restaurant.id}-desc`
+          );
+
+          // 説明用の非表示要素を作成
+          const description = document.createElement("div");
+          description.id = `marker-${restaurant.id}-desc`;
+          description.className = "sr-only";
+          description.textContent = `${restaurant.genre}、${restaurant.priceRange}`;
+          document.body.appendChild(description);
+        }
+      });
+    } catch (error) {
+      console.error("マーカーアクセシビリティの設定に失敗しました:", error);
     }
   }
 

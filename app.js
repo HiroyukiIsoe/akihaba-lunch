@@ -78,6 +78,25 @@ function showRestaurantDetails(restaurantId) {
 }
 
 /**
+ * グローバル関数: 履歴から複数店舗一覧を表示する
+ * HTMLのonclickイベントから呼び出される
+ */
+function showMultipleRestaurantsFromHistory() {
+  try {
+    if (!infoPanelManager) {
+      throw new Error("InfoPanelManagerが初期化されていません");
+    }
+
+    infoPanelManager.showMultipleRestaurantsFromHistory();
+  } catch (error) {
+    console.error("複数店舗一覧の履歴表示に失敗しました:", error);
+    if (infoPanelManager) {
+      infoPanelManager.showErrorMessage("店舗一覧の表示に失敗しました");
+    }
+  }
+}
+
+/**
  * 開発モードかどうかを判定する
  * @returns {boolean} 開発モードの場合true
  */

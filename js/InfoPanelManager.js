@@ -7,6 +7,7 @@ class InfoPanelManager {
   constructor(panelId) {
     this.panelId = panelId;
     this.panel = document.getElementById(panelId);
+    this.previousMultipleRestaurants = null; // 前回表示した複数店舗データを保存
 
     if (!this.panel) {
       throw new Error(`情報パネル '${panelId}' が見つかりません`);
@@ -40,11 +41,30 @@ class InfoPanelManager {
         }
       }
 
+      // 戻るボタンの表示判定
+      const showBackButton =
+        this.previousMultipleRestaurants &&
+        this.previousMultipleRestaurants.length > 1;
+
       // セキュアなHTML生成
       const html = `
         <div class="restaurant-details" data-restaurant-id="${escapeAttribute(
           restaurant.id || ""
         )}">
+          ${
+            showBackButton
+              ? `
+          <div class="back-button-container">
+            <button class="back-button" onclick="showMultipleRestaurantsFromHistory()" 
+                    role="button" tabindex="0" 
+                    onkeypress="if(event.key==='Enter'||event.key===' ') showMultipleRestaurantsFromHistory()"
+                    aria-label="店舗一覧に戻る">
+              ← 店舗一覧に戻る
+            </button>
+          </div>
+          `
+              : ""
+          }
           <h2 class="restaurant-name">${escapeHtml(
             restaurant.name || "店名不明"
           )}</h2>
@@ -108,7 +128,12 @@ class InfoPanelManager {
             <div class="tags">
               ${restaurant.tags
                 .filter((tag) => tag && typeof tag === "string") // 有効なタグのみフィルタ
-                .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
+                .map(
+                  (tag) =>
+                    `<span class="tag" data-tag="${escapeAttribute(
+                      tag
+                    )}">${escapeHtml(tag)}</span>`
+                )
                 .join("")}
             </div>
           </div>
@@ -163,6 +188,9 @@ class InfoPanelManager {
       if (validRestaurants.length === 0) {
         throw new Error("有効なレストランデータがありません");
       }
+
+      // 複数店舗データを履歴として保存
+      this.previousMultipleRestaurants = validRestaurants;
 
       const buildingName = validRestaurants[0].buildingName || "複数店舗";
       let html = `
@@ -245,12 +273,27 @@ class InfoPanelManager {
         /javascript:/gi,
         /vbscript:/gi,
         /data:text\/html/gi,
-        /on\w+\s*=\s*["'][^"']*["']/gi,
       ];
 
+      // 危険なイベントハンドラーの検出（安全なものは除外）
+      const dangerousEventHandlers = [
+        /on(?!click|keypress)\w+\s*=\s*["'][^"']*["']/gi, // onclick, keypress以外のイベントハンドラー
+        /onclick\s*=\s*["'][^"']*(?:alert|eval|document\.write|window\.open)[^"']*["']/gi, // 危険な関数を含むonclick
+        /onkeypress\s*=\s*["'][^"']*(?:alert|eval|document\.write|window\.open)[^"']*["']/gi, // 危険な関数を含むonkeypress
+      ];
+
+      // 基本的な危険パターンをチェック
       for (const pattern of dangerousPatterns) {
         if (pattern.test(html)) {
           console.warn("危険なパターンが検出されました:", pattern);
+          return true;
+        }
+      }
+
+      // 危険なイベントハンドラーをチェック
+      for (const pattern of dangerousEventHandlers) {
+        if (pattern.test(html)) {
+          console.warn("危険なイベントハンドラーが検出されました:", pattern);
           return true;
         }
       }
@@ -307,6 +350,25 @@ class InfoPanelManager {
    */
   clearPanel() {
     this.panel.innerHTML = "";
+  }
+
+  /**
+   * 履歴から複数店舗一覧を再表示する
+   */
+  showMultipleRestaurantsFromHistory() {
+    try {
+      if (
+        this.previousMultipleRestaurants &&
+        this.previousMultipleRestaurants.length > 0
+      ) {
+        this.showMultipleRestaurants(this.previousMultipleRestaurants);
+      } else {
+        this.showDefaultMessage();
+      }
+    } catch (error) {
+      console.error("履歴からの複数店舗表示に失敗しました:", error);
+      this.showErrorMessage("店舗一覧の表示に失敗しました");
+    }
   }
 
   /**

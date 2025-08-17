@@ -40,12 +40,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     // 情報パネルにデフォルトメッセージを表示
     infoPanelManager.showDefaultMessage();
 
-    // DataLoaderのテスト実行（開発環境のみ）
-    if (isDevelopmentMode()) {
-      await testDataLoader();
-      await testErrorHandlingAndSecurity();
-    }
-
     // レストランデータを読み込んで表示
     await restaurantManager.loadRestaurants();
     restaurantManager.displayRestaurants();
@@ -216,15 +210,30 @@ function setupMediaQueryListeners() {
   try {
     // スマートフォンサイズの監視
     const mobileQuery = window.matchMedia("(max-width: 480px)");
-    mobileQuery.addListener(handleMobileLayoutChange);
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener("change", handleMobileLayoutChange);
+    } else {
+      // 古いブラウザ対応
+      mobileQuery.addListener(handleMobileLayoutChange);
+    }
 
     // タブレットサイズの監視
     const tabletQuery = window.matchMedia("(max-width: 768px)");
-    tabletQuery.addListener(handleTabletLayoutChange);
+    if (tabletQuery.addEventListener) {
+      tabletQuery.addEventListener("change", handleTabletLayoutChange);
+    } else {
+      // 古いブラウザ対応
+      tabletQuery.addListener(handleTabletLayoutChange);
+    }
 
     // 横向き表示の監視
     const landscapeQuery = window.matchMedia("(orientation: landscape)");
-    landscapeQuery.addListener(handleOrientationLayoutChange);
+    if (landscapeQuery.addEventListener) {
+      landscapeQuery.addEventListener("change", handleOrientationLayoutChange);
+    } else {
+      // 古いブラウザ対応
+      landscapeQuery.addListener(handleOrientationLayoutChange);
+    }
   } catch (error) {
     console.error("メディアクエリリスナーの設定に失敗しました:", error);
   }

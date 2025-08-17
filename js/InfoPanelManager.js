@@ -14,30 +14,64 @@ class InfoPanelManager {
   }
 
   /**
-   * レストランの詳細情報を表示する
+   * レストランの詳細情報を表示する（セキュリティ強化版）
    * @param {Object} restaurant - レストランデータ
    */
   showRestaurantDetails(restaurant) {
     try {
+      // 入力データの検証
+      if (!restaurant || typeof restaurant !== "object") {
+        throw new Error("レストランデータが不正です");
+      }
+
+      // 必須フィールドの存在確認
+      const requiredFields = [
+        "id",
+        "name",
+        "genre",
+        "priceRange",
+        "hours",
+        "address",
+        "description",
+      ];
+      for (const field of requiredFields) {
+        if (!restaurant[field]) {
+          console.warn(`必須フィールド '${field}' が不足しています`);
+        }
+      }
+
+      // セキュアなHTML生成
       const html = `
-        <div class="restaurant-details">
-          <h2 class="restaurant-name">${escapeHtml(restaurant.name)}</h2>
+        <div class="restaurant-details" data-restaurant-id="${escapeAttribute(
+          restaurant.id || ""
+        )}">
+          <h2 class="restaurant-name">${escapeHtml(
+            restaurant.name || "店名不明"
+          )}</h2>
           <div class="restaurant-info">
             <div class="info-row">
               <span class="label">ジャンル:</span>
-              <span class="value">${escapeHtml(restaurant.genre)}</span>
+              <span class="value">${escapeHtml(
+                restaurant.genre || "不明"
+              )}</span>
             </div>
             <div class="info-row">
               <span class="label">価格帯:</span>
-              <span class="value">${escapeHtml(restaurant.priceRange)}</span>
+              <span class="value">${escapeHtml(
+                restaurant.priceRange || "不明"
+              )}</span>
             </div>
             <div class="info-row">
               <span class="label">営業時間:</span>
-              <span class="value">${escapeHtml(restaurant.hours)}</span>
+              <span class="value">${escapeHtml(
+                restaurant.hours || "不明"
+              )}</span>
             </div>
             <div class="info-row">
               <span class="label">住所:</span>
-              <span class="value">${escapeHtml(restaurant.address)}</span>
+              <span class="value">${escapeHtml(
+                restaurant.address || "不明"
+              )}</span>
             </div>
             ${
               restaurant.floor
@@ -62,15 +96,18 @@ class InfoPanelManager {
           </div>
           <div class="restaurant-description">
             <h3>おすすめメニュー・店舗情報</h3>
-            <p>${escapeHtml(restaurant.description)}</p>
+            <p>${escapeHtml(restaurant.description || "情報なし")}</p>
           </div>
           ${
-            restaurant.tags && restaurant.tags.length > 0
+            restaurant.tags &&
+            Array.isArray(restaurant.tags) &&
+            restaurant.tags.length > 0
               ? `
           <div class="restaurant-tags">
             <h3>タグ</h3>
             <div class="tags">
               ${restaurant.tags
+                .filter((tag) => tag && typeof tag === "string") // 有効なタグのみフィルタ
                 .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
                 .join("")}
             </div>
@@ -81,51 +118,88 @@ class InfoPanelManager {
         </div>
       `;
 
+      // DOMSanitizer的な追加チェック（基本的なXSS対策）
+      if (this.containsUnsafeContent(html)) {
+        throw new Error("不正なコンテンツが検出されました");
+      }
+
       this.panel.innerHTML = html;
+
+      // アクセシビリティ属性を設定
+      this.panel.setAttribute("aria-live", "polite");
+      this.panel.setAttribute("role", "region");
+      this.panel.setAttribute(
+        "aria-label",
+        `${restaurant.name || "店舗"}の詳細情報`
+      );
     } catch (error) {
       console.error("レストラン詳細の表示に失敗しました:", error);
-      this.showErrorMessage("店舗情報の表示に失敗しました");
+      this.showErrorMessage(
+        "店舗情報の表示に失敗しました。データに問題がある可能性があります。"
+      );
     }
   }
 
   /**
-   * 複数店舗の一覧を表示する
+   * 複数店舗の一覧を表示する（セキュリティ強化版）
    * @param {Array} restaurants - レストランデータの配列
    */
   showMultipleRestaurants(restaurants) {
     try {
-      const buildingName = restaurants[0].buildingName || "複数店舗";
+      // 入力データの検証
+      if (!Array.isArray(restaurants) || restaurants.length === 0) {
+        throw new Error("レストランデータが不正です");
+      }
+
+      // 有効なレストランデータのみフィルタ
+      const validRestaurants = restaurants.filter(
+        (restaurant) =>
+          restaurant &&
+          typeof restaurant === "object" &&
+          restaurant.id &&
+          restaurant.name
+      );
+
+      if (validRestaurants.length === 0) {
+        throw new Error("有効なレストランデータがありません");
+      }
+
+      const buildingName = validRestaurants[0].buildingName || "複数店舗";
       let html = `
         <div class="multiple-restaurants">
           <h2>${escapeHtml(buildingName)}</h2>
           <p class="building-info">${
-            restaurants.length
+            validRestaurants.length
           }店舗あります。店舗を選択してください。</p>
           <div class="restaurant-list">
       `;
 
-      restaurants.forEach((restaurant) => {
+      validRestaurants.forEach((restaurant, index) => {
+        // 各レストランデータの安全性チェック
+        const safeId = escapeAttribute(restaurant.id);
+        const safeName = escapeHtml(restaurant.name || "店名不明");
+        const safeGenre = escapeHtml(restaurant.genre || "不明");
+        const safePrice = escapeHtml(restaurant.priceRange || "不明");
+        const safeHours = escapeHtml(restaurant.hours || "不明");
+        const safeFloor = restaurant.floor ? escapeHtml(restaurant.floor) : "";
+
         html += `
-          <div class="restaurant-item" onclick="showRestaurantDetails('${
-            restaurant.id
-          }')" role="button" tabindex="0" onkeypress="if(event.key==='Enter'||event.key===' ') showRestaurantDetails('${
-          restaurant.id
-        }')" aria-label="${escapeHtml(restaurant.name)}の詳細を表示">
+          <div class="restaurant-item" 
+               onclick="showRestaurantDetails('${safeId}')" 
+               role="button" 
+               tabindex="0" 
+               onkeypress="if(event.key==='Enter'||event.key===' ') showRestaurantDetails('${safeId}')" 
+               aria-label="${safeName}の詳細を表示"
+               data-restaurant-index="${index}">
             <h3 class="restaurant-name">
-              ${escapeHtml(restaurant.name)}
-              ${
-                restaurant.floor
-                  ? `<span class="floor">(${escapeHtml(
-                      restaurant.floor
-                    )})</span>`
-                  : ""
-              }
+              ${safeName}
+              ${safeFloor ? `<span class="floor">(${safeFloor})</span>` : ""}
             </h3>
             <div class="restaurant-summary">
-              <span class="genre">${escapeHtml(restaurant.genre)}</span>
-              <span class="price">${escapeHtml(restaurant.priceRange)}</span>
+              <span class="genre">${safeGenre}</span>
+              <span class="price">${safePrice}</span>
             </div>
-            <p class="restaurant-hours">${escapeHtml(restaurant.hours)}</p>
+            <p class="restaurant-hours">${safeHours}</p>
           </div>
         `;
       });
@@ -135,10 +209,57 @@ class InfoPanelManager {
         </div>
       `;
 
+      // 安全性チェック
+      if (this.containsUnsafeContent(html)) {
+        throw new Error("不正なコンテンツが検出されました");
+      }
+
       this.panel.innerHTML = html;
+
+      // アクセシビリティ属性を設定
+      this.panel.setAttribute("aria-live", "polite");
+      this.panel.setAttribute("role", "region");
+      this.panel.setAttribute("aria-label", `${buildingName}の店舗一覧`);
     } catch (error) {
       console.error("複数店舗一覧の表示に失敗しました:", error);
-      this.showErrorMessage("店舗一覧の表示に失敗しました");
+      this.showErrorMessage(
+        "店舗一覧の表示に失敗しました。データに問題がある可能性があります。"
+      );
+    }
+  }
+
+  /**
+   * HTMLコンテンツの安全性をチェックする
+   * @param {string} html - チェックするHTMLコンテンツ
+   * @returns {boolean} 不正なコンテンツが含まれている場合はtrue
+   */
+  containsUnsafeContent(html) {
+    try {
+      // 危険なタグやスクリプトの検出
+      const dangerousPatterns = [
+        /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+        /<iframe\b[^>]*>/gi,
+        /<object\b[^>]*>/gi,
+        /<embed\b[^>]*>/gi,
+        /<form\b[^>]*>/gi,
+        /javascript:/gi,
+        /vbscript:/gi,
+        /data:text\/html/gi,
+        /on\w+\s*=\s*["'][^"']*["']/gi,
+      ];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(html)) {
+          console.warn("危険なパターンが検出されました:", pattern);
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error("安全性チェックでエラーが発生しました:", error);
+      // エラーが発生した場合は安全側に倒して不正とみなす
+      return true;
     }
   }
 

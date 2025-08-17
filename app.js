@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // DataLoaderのテスト実行（開発環境のみ）
     if (isDevelopmentMode()) {
       await testDataLoader();
+      await testErrorHandlingAndSecurity();
     }
 
     // レストランデータを読み込んで表示
@@ -119,14 +120,146 @@ function getAppState() {
   };
 }
 
-// エラーハンドリング: 未処理のエラーをキャッチ
+// グローバルエラーハンドリング（強化版）
+
+// 未処理のJavaScriptエラーをキャッチ
 window.addEventListener("error", function (event) {
-  console.error("未処理のエラーが発生しました:", event.error);
-  showError("予期しないエラーが発生しました。ページを再読み込みしてください。");
+  const error = event.error;
+  const errorInfo = {
+    message: error?.message || event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    stack: error?.stack,
+    timestamp: new Date().toISOString(),
+  };
+
+  console.error("未処理のJavaScriptエラーが発生しました:", errorInfo);
+
+  // ユーザーフレンドリーなエラーメッセージを表示
+  let userMessage = "予期しないエラーが発生しました。";
+
+  if (errorInfo.message.includes("RESTAURANT_DATA")) {
+    userMessage = "レストランデータの読み込みに失敗しました。";
+  } else if (
+    errorInfo.message.includes("Leaflet") ||
+    errorInfo.message.includes("map")
+  ) {
+    userMessage = "地図の表示に問題が発生しました。";
+  } else if (
+    errorInfo.message.includes("fetch") ||
+    errorInfo.message.includes("network")
+  ) {
+    userMessage = "ネットワークエラーが発生しました。";
+  }
+
+  showError(`${userMessage} ページを再読み込みしてください。`, "error", true);
+
+  // 開発モードでは詳細情報をコンソールに出力
+  if (isDevelopmentMode()) {
+    console.table(errorInfo);
+  }
 });
 
-// エラーハンドリング: 未処理のPromise拒否をキャッチ
+// 未処理のPromise拒否をキャッチ
 window.addEventListener("unhandledrejection", function (event) {
-  console.error("未処理のPromise拒否が発生しました:", event.reason);
-  showError("データの読み込みに失敗しました。ページを再読み込みしてください。");
+  const reason = event.reason;
+  const errorInfo = {
+    reason: reason?.message || reason,
+    stack: reason?.stack,
+    timestamp: new Date().toISOString(),
+  };
+
+  console.error("未処理のPromise拒否が発生しました:", errorInfo);
+
+  // ユーザーフレンドリーなエラーメッセージを表示
+  let userMessage = "データの処理中にエラーが発生しました。";
+
+  if (String(reason).includes("fetch") || String(reason).includes("load")) {
+    userMessage = "データの読み込みに失敗しました。";
+  } else if (
+    String(reason).includes("coordinate") ||
+    String(reason).includes("座標")
+  ) {
+    userMessage = "地図データに問題があります。";
+  } else if (
+    String(reason).includes("validation") ||
+    String(reason).includes("検証")
+  ) {
+    userMessage = "データの検証に失敗しました。";
+  }
+
+  showError(`${userMessage} ページを再読み込みしてください。`, "error", true);
+
+  // 開発モードでは詳細情報をコンソールに出力
+  if (isDevelopmentMode()) {
+    console.table(errorInfo);
+  }
+
+  // Promise拒否を処理済みとしてマーク
+  event.preventDefault();
+});
+
+// リソース読み込みエラーをキャッチ
+window.addEventListener(
+  "error",
+  function (event) {
+    if (event.target !== window) {
+      const target = event.target;
+      const errorInfo = {
+        tagName: target.tagName,
+        src: target.src || target.href,
+        type: event.type,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.error("リソース読み込みエラーが発生しました:", errorInfo);
+
+      // 重要なリソースの読み込み失敗の場合はユーザーに通知
+      if (target.tagName === "SCRIPT") {
+        if (target.src.includes("leaflet")) {
+          showError(
+            "地図ライブラリの読み込みに失敗しました。インターネット接続を確認してください。",
+            "error"
+          );
+        } else if (target.src.includes("data.js")) {
+          showError("レストランデータの読み込みに失敗しました。", "error");
+        }
+      } else if (target.tagName === "LINK" && target.href.includes("leaflet")) {
+        showError(
+          "地図スタイルの読み込みに失敗しました。表示が正しくない可能性があります。",
+          "warning",
+          true
+        );
+      }
+
+      // 開発モードでは詳細情報をコンソールに出力
+      if (isDevelopmentMode()) {
+        console.table(errorInfo);
+      }
+    }
+  },
+  true
+); // キャプチャフェーズで実行
+
+// セキュリティ関連のエラーハンドリング
+window.addEventListener("securitypolicyviolation", function (event) {
+  const violationInfo = {
+    blockedURI: event.blockedURI,
+    violatedDirective: event.violatedDirective,
+    originalPolicy: event.originalPolicy,
+    timestamp: new Date().toISOString(),
+  };
+
+  console.error("セキュリティポリシー違反が発生しました:", violationInfo);
+
+  // 開発モードでは詳細情報をコンソールに出力
+  if (isDevelopmentMode()) {
+    console.table(violationInfo);
+    showError(
+      "セキュリティポリシー違反が検出されました。開発者ツールを確認してください。",
+      "warning",
+      true
+    );
+  }
 });

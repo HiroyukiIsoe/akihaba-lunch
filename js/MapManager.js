@@ -175,33 +175,93 @@ class MapManager {
   }
 
   /**
-   * 座標データを検証する
+   * 座標データを検証する（強化版）
    * @param {number} lat - 緯度
    * @param {number} lng - 経度
+   * @throws {Error} 座標データが不正な場合
    */
   validateCoordinates(lat, lng) {
-    if (typeof lat !== "number" || typeof lng !== "number") {
-      throw new Error("座標は数値である必要があります");
+    // null、undefined、空文字列の確認
+    if (lat == null || lng == null) {
+      throw new Error("緯度・経度にnullまたはundefinedが含まれています");
     }
-    if (lat < -90 || lat > 90) {
-      throw new Error(`不正な緯度です: ${lat}`);
+
+    // 数値型の確認（文字列数値も考慮）
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+
+    if (isNaN(numLat) || isNaN(numLng)) {
+      throw new Error(
+        `緯度・経度が数値に変換できません: lat=${lat}, lng=${lng}`
+      );
     }
-    if (lng < -180 || lng > 180) {
-      throw new Error(`不正な経度です: ${lng}`);
+
+    // 有効な範囲の確認
+    if (numLat < -90 || numLat > 90) {
+      throw new Error(`緯度が有効範囲外です: ${numLat} (有効範囲: -90 ～ 90)`);
     }
+
+    if (numLng < -180 || numLng > 180) {
+      throw new Error(
+        `経度が有効範囲外です: ${numLng} (有効範囲: -180 ～ 180)`
+      );
+    }
+
+    // NaN や Infinity の確認
+    if (!isFinite(numLat) || !isFinite(numLng)) {
+      throw new Error(
+        "緯度・経度に無効な数値が含まれています（Infinity、-Infinity、NaN）"
+      );
+    }
+
+    // 精度の確認（極端に高精度な座標の警告）
+    const latStr = String(lat);
+    const lngStr = String(lng);
+    const latDecimals = latStr.includes(".") ? latStr.split(".")[1].length : 0;
+    const lngDecimals = lngStr.includes(".") ? lngStr.split(".")[1].length : 0;
+
+    if (latDecimals > 10 || lngDecimals > 10) {
+      console.warn(
+        `座標の精度が高すぎます（小数点以下${Math.max(
+          latDecimals,
+          lngDecimals
+        )}桁）: ` + `lat=${lat}, lng=${lng}`
+      );
+    }
+
+    return { lat: numLat, lng: numLng };
   }
 
   /**
-   * エラーメッセージを表示する
+   * エラーメッセージを表示する（強化版）
    * @param {string} message - エラーメッセージ
+   * @param {string} type - エラータイプ（'error', 'warning', 'info'）
    */
-  showError(message) {
-    const errorElement = document.getElementById("error-message");
-    const errorText = document.getElementById("error-text");
+  showError(message, type = "error") {
+    try {
+      // HTMLエスケープを適用
+      const safeMessage = escapeHtml(message);
 
-    if (errorElement && errorText) {
-      errorText.textContent = message;
-      errorElement.style.display = "block";
+      const errorElement = document.getElementById("error-message");
+      const errorText = document.getElementById("error-text");
+
+      if (errorElement && errorText) {
+        errorElement.className = `error-message ${type}`;
+        errorText.innerHTML = safeMessage;
+        errorElement.style.display = "block";
+
+        // アクセシビリティ対応
+        errorElement.setAttribute("role", "alert");
+        errorElement.setAttribute("aria-live", "assertive");
+
+        console.error(`[MapManager ${type.toUpperCase()}] ${message}`);
+      } else {
+        // フォールバック: コンソールにエラーを出力
+        console.error(`MapManagerエラー表示要素が見つかりません: ${message}`);
+      }
+    } catch (error) {
+      console.error("MapManagerエラー表示処理でエラーが発生しました:", error);
+      console.error("元のエラーメッセージ:", message);
     }
   }
 

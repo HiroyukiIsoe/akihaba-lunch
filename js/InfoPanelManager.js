@@ -8,10 +8,15 @@ class InfoPanelManager {
     this.panelId = panelId;
     this.panel = document.getElementById(panelId);
     this.previousMultipleRestaurants = null; // 前回表示した複数店舗データを保存
+    this.isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
     if (!this.panel) {
       throw new Error(`情報パネル '${panelId}' が見つかりません`);
     }
+
+    // タッチデバイス対応の初期化
+    this.setupTouchOptimizations();
   }
 
   /**
@@ -368,6 +373,118 @@ class InfoPanelManager {
     } catch (error) {
       console.error("履歴からの複数店舗表示に失敗しました:", error);
       this.showErrorMessage("店舗一覧の表示に失敗しました");
+    }
+  }
+
+  /**
+   * タッチデバイス向けの最適化を設定する
+   */
+  setupTouchOptimizations() {
+    try {
+      if (this.isTouchDevice) {
+        // タッチデバイス用のスクロール最適化
+        this.panel.style.webkitOverflowScrolling = "touch";
+        this.panel.style.overflowScrolling = "touch";
+
+        // タッチイベントの処理を追加
+        this.panel.addEventListener(
+          "touchstart",
+          this.handleTouchStart.bind(this),
+          { passive: true }
+        );
+        this.panel.addEventListener(
+          "touchend",
+          this.handleTouchEnd.bind(this),
+          { passive: true }
+        );
+
+        console.log("情報パネルのタッチデバイス最適化が適用されました");
+      }
+    } catch (error) {
+      console.error("タッチデバイス最適化の設定に失敗しました:", error);
+    }
+  }
+
+  /**
+   * タッチ開始イベントのハンドラー
+   * @param {TouchEvent} e - タッチイベント
+   */
+  handleTouchStart(e) {
+    try {
+      this.touchStartTime = Date.now();
+      this.touchStartY = e.touches[0].clientY;
+
+      // タッチ開始時のフィードバック
+      const target = e.target.closest(".restaurant-item, .back-button");
+      if (target) {
+        target.classList.add("touch-active");
+      }
+    } catch (error) {
+      console.error("タッチ開始イベントの処理に失敗しました:", error);
+    }
+  }
+
+  /**
+   * タッチ終了イベントのハンドラー
+   * @param {TouchEvent} e - タッチイベント
+   */
+  handleTouchEnd(e) {
+    try {
+      const touchDuration = Date.now() - (this.touchStartTime || 0);
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchDistance = Math.abs(touchEndY - (this.touchStartY || 0));
+
+      // タッチフィードバックのクリア
+      const activeElements = this.panel.querySelectorAll(".touch-active");
+      activeElements.forEach((element) => {
+        element.classList.remove("touch-active");
+      });
+
+      // 短いタッチかつ移動距離が小さい場合はタップとして処理
+      if (touchDuration < 300 && touchDistance < 10) {
+        const target = e.target.closest(".restaurant-item, .back-button");
+        if (target) {
+          // タップ時の視覚的フィードバック
+          this.provideTapFeedback(target);
+        }
+      }
+    } catch (error) {
+      console.error("タッチ終了イベントの処理に失敗しました:", error);
+    }
+  }
+
+  /**
+   * タップ時の視覚的フィードバックを提供する
+   * @param {HTMLElement} element - フィードバック対象の要素
+   */
+  provideTapFeedback(element) {
+    try {
+      element.classList.add("tap-feedback");
+      setTimeout(() => {
+        element.classList.remove("tap-feedback");
+      }, 150);
+    } catch (error) {
+      console.error("タップフィードバックの提供に失敗しました:", error);
+    }
+  }
+
+  /**
+   * タッチデバイス用のアクセシビリティ属性を追加する
+   * @param {HTMLElement} element - 対象要素
+   * @param {string} label - アクセシビリティラベル
+   */
+  addTouchAccessibility(element, label) {
+    try {
+      if (this.isTouchDevice) {
+        element.setAttribute("role", "button");
+        element.setAttribute("aria-label", label);
+        element.setAttribute("tabindex", "0");
+
+        // タッチデバイス用のスタイルクラスを追加
+        element.classList.add("touch-optimized");
+      }
+    } catch (error) {
+      console.error("タッチアクセシビリティの設定に失敗しました:", error);
     }
   }
 

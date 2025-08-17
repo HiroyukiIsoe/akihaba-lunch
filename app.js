@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     // ローディング表示
     showLoading(true);
 
+    // レスポンシブデザインとタッチデバイス対応の初期化
+    initializeResponsiveDesign();
+
     // 各マネージャーインスタンスを作成
     mapManager = new MapManager("map", AKIHABARA_CENTER, DEFAULT_ZOOM);
     infoPanelManager = new InfoPanelManager("info-panel");
@@ -25,6 +28,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     // 地図を初期化（要件1.1, 1.2, 1.3に対応）
     mapManager.initializeMap();
     console.log("地図の初期化が完了しました");
+
+    // 地図の表示を確実にするための追加処理
+    setTimeout(() => {
+      if (mapManager && mapManager.getMap()) {
+        mapManager.getMap().invalidateSize();
+        console.log("地図の表示を再調整しました");
+      }
+    }, 500);
 
     // 情報パネルにデフォルトメッセージを表示
     infoPanelManager.showDefaultMessage();
@@ -93,6 +104,321 @@ function showMultipleRestaurantsFromHistory() {
     if (infoPanelManager) {
       infoPanelManager.showErrorMessage("店舗一覧の表示に失敗しました");
     }
+  }
+}
+
+/**
+ * レスポンシブデザインとタッチデバイス対応を初期化する
+ */
+function initializeResponsiveDesign() {
+  try {
+    // デバイス情報の取得
+    const deviceInfo = getDeviceInfo();
+    console.log("デバイス情報:", deviceInfo);
+
+    // ビューポートの設定確認と調整
+    setupViewport();
+
+    // 画面サイズ変更とデバイス回転の監視
+    setupResponsiveListeners();
+
+    // タッチデバイス固有の設定
+    if (deviceInfo.isTouchDevice) {
+      setupTouchDeviceOptimizations();
+    }
+
+    // 初期レイアウト調整
+    adjustLayoutForCurrentScreen();
+
+    console.log("レスポンシブデザインとタッチデバイス対応が初期化されました");
+  } catch (error) {
+    console.error("レスポンシブデザイン初期化に失敗しました:", error);
+  }
+}
+
+/**
+ * デバイス情報を取得する
+ * @returns {Object} デバイス情報
+ */
+function getDeviceInfo() {
+  const isTouchDevice =
+    "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 480;
+  const isTablet = window.innerWidth > 480 && window.innerWidth <= 768;
+  const isDesktop = window.innerWidth > 768;
+  const isLandscape = window.innerWidth > window.innerHeight;
+  const pixelRatio = window.devicePixelRatio || 1;
+
+  return {
+    isTouchDevice,
+    isSmallScreen,
+    isTablet,
+    isDesktop,
+    isLandscape,
+    pixelRatio,
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight,
+    userAgent: navigator.userAgent,
+  };
+}
+
+/**
+ * ビューポートの設定を確認・調整する
+ */
+function setupViewport() {
+  try {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      // 既存のビューポート設定を確認
+      const content = viewportMeta.getAttribute("content");
+      if (!content.includes("user-scalable=no")) {
+        // ユーザーによるズームを許可（アクセシビリティ向上）
+        console.log("ビューポート設定: ユーザーズーム許可");
+      }
+    }
+  } catch (error) {
+    console.error("ビューポート設定の確認に失敗しました:", error);
+  }
+}
+
+/**
+ * レスポンシブリスナーを設定する
+ */
+function setupResponsiveListeners() {
+  try {
+    // リサイズイベントのデバウンス処理
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        handleScreenResize();
+      }, 250);
+    });
+
+    // デバイス回転イベント
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        handleOrientationChange();
+      }, 100);
+    });
+
+    // メディアクエリの変更監視
+    setupMediaQueryListeners();
+  } catch (error) {
+    console.error("レスポンシブリスナーの設定に失敗しました:", error);
+  }
+}
+
+/**
+ * メディアクエリリスナーを設定する
+ */
+function setupMediaQueryListeners() {
+  try {
+    // スマートフォンサイズの監視
+    const mobileQuery = window.matchMedia("(max-width: 480px)");
+    mobileQuery.addListener(handleMobileLayoutChange);
+
+    // タブレットサイズの監視
+    const tabletQuery = window.matchMedia("(max-width: 768px)");
+    tabletQuery.addListener(handleTabletLayoutChange);
+
+    // 横向き表示の監視
+    const landscapeQuery = window.matchMedia("(orientation: landscape)");
+    landscapeQuery.addListener(handleOrientationLayoutChange);
+  } catch (error) {
+    console.error("メディアクエリリスナーの設定に失敗しました:", error);
+  }
+}
+
+/**
+ * タッチデバイス固有の最適化を設定する
+ */
+function setupTouchDeviceOptimizations() {
+  try {
+    // タッチイベントのパッシブリスナー設定
+    document.addEventListener("touchstart", () => {}, { passive: true });
+    document.addEventListener("touchmove", () => {}, { passive: true });
+
+    // iOS Safariの特別な対応
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      setupiOSOptimizations();
+    }
+
+    // Androidの特別な対応
+    if (/Android/.test(navigator.userAgent)) {
+      setupAndroidOptimizations();
+    }
+
+    console.log("タッチデバイス最適化が適用されました");
+  } catch (error) {
+    console.error("タッチデバイス最適化の設定に失敗しました:", error);
+  }
+}
+
+/**
+ * iOS固有の最適化を設定する
+ */
+function setupiOSOptimizations() {
+  try {
+    // iOS Safariのバウンススクロール対策
+    document.body.style.webkitOverflowScrolling = "touch";
+
+    // iOS Safariのズーム無効化（必要に応じて）
+    document.addEventListener("gesturestart", (e) => {
+      e.preventDefault();
+    });
+
+    console.log("iOS固有の最適化が適用されました");
+  } catch (error) {
+    console.error("iOS最適化の設定に失敗しました:", error);
+  }
+}
+
+/**
+ * Android固有の最適化を設定する
+ */
+function setupAndroidOptimizations() {
+  try {
+    // Android Chromeの特別な対応（必要に応じて追加）
+    console.log("Android固有の最適化が適用されました");
+  } catch (error) {
+    console.error("Android最適化の設定に失敗しました:", error);
+  }
+}
+
+/**
+ * 画面リサイズ時の処理
+ */
+function handleScreenResize() {
+  try {
+    adjustLayoutForCurrentScreen();
+
+    // 地図のサイズを再計算
+    if (mapManager && mapManager.getMap()) {
+      mapManager.getMap().invalidateSize();
+    }
+
+    console.log("画面リサイズに対応しました");
+  } catch (error) {
+    console.error("画面リサイズ処理に失敗しました:", error);
+  }
+}
+
+/**
+ * デバイス回転時の処理
+ */
+function handleOrientationChange() {
+  try {
+    adjustLayoutForCurrentScreen();
+
+    // 地図のサイズを再計算
+    if (mapManager && mapManager.getMap()) {
+      mapManager.getMap().invalidateSize();
+    }
+
+    console.log("デバイス回転に対応しました");
+  } catch (error) {
+    console.error("デバイス回転処理に失敗しました:", error);
+  }
+}
+
+/**
+ * モバイルレイアウト変更時の処理
+ */
+function handleMobileLayoutChange(mq) {
+  try {
+    if (mq.matches) {
+      // スマートフォンレイアウトに切り替え
+      document.body.classList.add("mobile-layout");
+      console.log("スマートフォンレイアウトに切り替えました");
+    } else {
+      document.body.classList.remove("mobile-layout");
+    }
+  } catch (error) {
+    console.error("モバイルレイアウト変更処理に失敗しました:", error);
+  }
+}
+
+/**
+ * タブレットレイアウト変更時の処理
+ */
+function handleTabletLayoutChange(mq) {
+  try {
+    if (mq.matches) {
+      // タブレットレイアウトに切り替え
+      document.body.classList.add("tablet-layout");
+      console.log("タブレットレイアウトに切り替えました");
+    } else {
+      document.body.classList.remove("tablet-layout");
+    }
+  } catch (error) {
+    console.error("タブレットレイアウト変更処理に失敗しました:", error);
+  }
+}
+
+/**
+ * 横向きレイアウト変更時の処理
+ */
+function handleOrientationLayoutChange(mq) {
+  try {
+    if (mq.matches) {
+      // 横向きレイアウトに切り替え
+      document.body.classList.add("landscape-layout");
+      console.log("横向きレイアウトに切り替えました");
+    } else {
+      document.body.classList.remove("landscape-layout");
+    }
+  } catch (error) {
+    console.error("横向きレイアウト変更処理に失敗しました:", error);
+  }
+}
+
+/**
+ * 現在の画面サイズに応じてレイアウトを調整する
+ */
+function adjustLayoutForCurrentScreen() {
+  try {
+    const deviceInfo = getDeviceInfo();
+
+    // 画面サイズに応じたクラスを追加
+    document.body.className = document.body.className.replace(
+      /\b(mobile|tablet|desktop)-layout\b/g,
+      ""
+    );
+
+    if (deviceInfo.isSmallScreen) {
+      document.body.classList.add("mobile-layout");
+    } else if (deviceInfo.isTablet) {
+      document.body.classList.add("tablet-layout");
+    } else if (deviceInfo.isDesktop) {
+      document.body.classList.add("desktop-layout");
+    }
+
+    if (deviceInfo.isLandscape) {
+      document.body.classList.add("landscape-layout");
+    } else {
+      document.body.classList.remove("landscape-layout");
+    }
+
+    if (deviceInfo.isTouchDevice) {
+      document.body.classList.add("touch-device");
+    }
+
+    // 地図のサイズ再計算（モバイルデバイスでの表示問題対応）
+    if (mapManager && mapManager.getMap()) {
+      setTimeout(() => {
+        mapManager.getMap().invalidateSize();
+        // 地図コンテナの強制リサイズ
+        const mapContainer = document.getElementById("map");
+        if (mapContainer && deviceInfo.isTouchDevice) {
+          mapContainer.style.width = "100%";
+          mapContainer.style.height = "100%";
+          mapManager.getMap().invalidateSize();
+        }
+      }, 100);
+    }
+  } catch (error) {
+    console.error("レイアウト調整に失敗しました:", error);
   }
 }
 
